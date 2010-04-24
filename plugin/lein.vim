@@ -43,7 +43,7 @@ if !exists('g:lein_no_map_default') || !g:lein_no_map_default
 	nnoremap <Leader>lp :PushToClojars<Enter>
 endif
 
-
+" =reverse_find
 function! s:reverse_find(filename, path, level)
 	if a:level < g:lein_find_max
 		let filelist = glob(a:path . "/" . a:filename)
@@ -57,6 +57,7 @@ function! s:reverse_find(filename, path, level)
 	endif
 endfunction
 
+" =get_project_dir
 function! s:get_project_dir()
 	let project_file = <SID>reverse_find(g:lein_project, ".", 0)
 	if project_file != ""
@@ -66,6 +67,7 @@ function! s:get_project_dir()
 	endif
 endfunction
 
+" =open_result_window
 function! s:open_result_window(command)
 	let bufname = printf("[lein] %s", a:command)
 
@@ -89,6 +91,7 @@ function! s:open_result_window(command)
 	endif
 endfunction
 
+" =write_result_buffer
 function! s:write_result_buffer(loading_message, command)
 	silent % delete _
 	call append(0, a:loading_message)
@@ -100,6 +103,7 @@ function! s:write_result_buffer(loading_message, command)
 	call delete(printf("%s", g:lein_temporary))
 endfunction
 
+" =simple_lein_run
 function! s:simple_lein_run(command)
 	let path = <SID>get_project_dir()
 	if path != ""
@@ -111,6 +115,7 @@ function! s:simple_lein_run(command)
 	endif
 endfunction
 
+" =system_lein
 function! s:system_lein(command, output_flag)
 	if a:output_flag
 		return system(g:lein_command . " " . a:command . " > " . g:lein_temporary)
@@ -119,6 +124,7 @@ function! s:system_lein(command, output_flag)
 	endif
 endfunction
 
+" =LeinTest
 function! LeinTest()
 	let path = <SID>get_project_dir()
 	if path != ""
@@ -131,6 +137,7 @@ function! LeinTest()
 	endif
 endfunction
 
+" =PushToClojars
 function! PushToClojars()
 	let path = <SID>get_project_dir()
 
