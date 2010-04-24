@@ -2,33 +2,45 @@
 plugin for leiningen
 
 ## Commands
-*:LeinPom*
+**:LeinPom**
   lein pom
-*:LeinInstall*
+
+**:LeinInstall**
   lein install
-*:LeinJar*
+
+**:LeinJar**
   lein jar
-*:LeinTest*
+
+**:LeinTest**
   lein test
-*:LeinDeps*
+  
+**:LeinDeps**
   lein deps
-*:LeinUberJar*
+
+**:LeinUberJar**
   lein uberjar
-*:LeinClean*
+  
+**:LeinClean**
   lein clean
-*:LeinCompile*
+
+**:LeinCompile**
   lein compile
 
 ## Key maps
-*<Leader>lm*
+**<Leader>lm**
   :LeinPom
-*<Leader>li*
+  
+**<Leader>li**
   :LeinInstall
-*<Leader>lj*
+
+**<Leader>lj**
   :LeinJar
-*<Leader>lt*
+
+**<Leader>lt**
   :LeinTest
-*<Leader>ld*
+
+**<Leader>ld**
   :LeinDeps
-*<Leader>lc*
+
+**<Leader>lc**
   :LeinCompile
