@@ -27,20 +27,20 @@ plugin for leiningen
   lein compile
 
 ## Key maps
-**<Leader>lm**
+**`<Leader>`lm**
   :LeinPom
   
-**<Leader>li**
+**`<Leader>`li**
   :LeinInstall
 
-**<Leader>lj**
+**`<Leader>`lj**
   :LeinJar
 
-**<Leader>lt**
+**`<Leader>`lt**
   :LeinTest
 
-**<Leader>ld**
+**`<Leader>`ld**
   :LeinDeps
 
-**<Leader>lc**
+**`<Leader>`lc**
   :LeinCompile
