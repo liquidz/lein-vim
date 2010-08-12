@@ -153,6 +153,10 @@ function! PushToClojars()
 	endif
 endfunction
 
+function! LeinHoge(args)
+	echo 'args = ' . a:args
+endfunction
+
 command! LeinTest call LeinTest()
 command! LeinPom call s:simple_lein_run('pom')
 command! LeinJar call s:simple_lein_run('jar')
@@ -162,3 +166,4 @@ command! LeinUberJar call s:simple_lein_run('uberjar')
 command! LeinClean call s:simple_lein_run('clean')
 command! LeinCompile call s:simple_lein_run('compile')
 command! PushToClojars call PushToClojars()
+command! -nargs=+ Lein call s:simple_lein_run(<q-args>)
