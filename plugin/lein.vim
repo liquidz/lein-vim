@@ -21,19 +21,6 @@ if !exists('g:lein_project_not_found')
 endif
 " }}}
 
-" =key mappings {{{
-if !exists('g:lein_no_map_default') || !g:lein_no_map_default
-	nnoremap <Leader>lt :LeinTest<Enter>
-	nnoremap <Leader>lj :LeinJar<Enter>
-	nnoremap <Leader>lm :LeinPom<Enter>
-	nnoremap <Leader>ld :LeinDeps<Enter>
-	nnoremap <Leader>li :LeinInstall<Enter>
-	nnoremap <Leader>lu :LeinUberJar<Enter>
-	nnoremap <Leader>lc :LeinCompile<Enter>
-	nnoremap <Leader>lp :PushToClojars<Enter>
-endif
-" }}}
-
 " =reverse_find
 function! s:reverse_find(filename, path)
 	if fnamemodify(a:path, ':p:h') == '/'
@@ -57,6 +44,23 @@ function! s:get_project_dir()
 	else
 		return ''
 	endif
+endfunction
+
+function! s:trim(str)
+	let res = substitute(a:str, '\(^\s\+\)\|\(\s\+$\)', '', 'g')
+	"echo 'res = ' . res
+	return res
+endfunction
+
+function! s:update_clojure_namespace()
+	let b:clojure_ns =  <SID>trim(substitute(getline(search('(ns', 'bn')), '\((ns\|)\)', '', 'g'))
+endfunction
+
+"(ns hello
+")
+
+function! s:get_clojure_namespace()
+	echo <SID>trim(substitute(getline(search('(ns', 'bn')), '\((ns\|)\|"\)', '', 'g'))
 endfunction
 
 " =open_result_window
@@ -101,6 +105,7 @@ function! s:simple_lein_run(command)
 		execute printf('cd %s', path)
 		echo <SID>system_lein(a:command)
 		execute 'cd -'
+		echo 'fin'
 	else
 		echo g:lein_project_not_found
 	endif
@@ -153,17 +158,44 @@ function! PushToClojars()
 	endif
 endfunction
 
-function! LeinHoge(args)
-	echo 'args = ' . a:args
-endfunction
+" =key mappings {{{
+aug LeinKeymap
+	if !exists('g:lein_no_map_default') || !g:lein_no_map_default
+		au!
+		au FileType clojure nnoremap <Leader>lt :LeinTest<CR>
+		au FileType clojure nnoremap <Leader>lj :LeinJar<CR>
+		au FileType clojure nnoremap <Leader>lm :LeinPom<CR>
+		au FileType clojure nnoremap <Leader>ld :LeinDeps<CR>
+		au FileType clojure nnoremap <Leader>li :LeinInstall<CR>
+		au FileType clojure nnoremap <Leader>lu :LeinUberJar<CR>
+		au FileType clojure nnoremap <Leader>lc :LeinCompile<CR>
+		au FileType clojure nnoremap <Leader>lp :PushToClojars<CR>
+		au FileType clojure nnoremap <Leader>ll :Lein 
+	
+"		cnoremap <silent> <Leader>ns expand('b:clojure_ns')<CR>
+"		nnoremap <Leader>ns :call echo s:get_clojure_namespace
+	endif
+aug END
+" }}}
 
-command! LeinTest call LeinTest()
-command! LeinPom call s:simple_lein_run('pom')
-command! LeinJar call s:simple_lein_run('jar')
-command! LeinDeps call s:simple_lein_run('deps')
-command! LeinInstall call s:simple_lein_run('install')
-command! LeinUberJar call s:simple_lein_run('uberjar')
-command! LeinClean call s:simple_lein_run('clean')
-command! LeinCompile call s:simple_lein_run('compile')
-command! PushToClojars call PushToClojars()
-command! -nargs=+ Lein call s:simple_lein_run(<q-args>)
+" =commands {{{
+aug LeinCommand
+	au!
+	au FileType clojure command! LeinTest call LeinTest()
+	au FileType clojure command! LeinPom call s:simple_lein_run('pom')
+	au FileType clojure command! LeinJar call s:simple_lein_run('jar')
+	au FileType clojure command! LeinDeps call s:simple_lein_run('deps')
+	au FileType clojure command! LeinInstall call s:simple_lein_run('install')
+	au FileType clojure command! LeinUberJar call s:simple_lein_run('uberjar')
+	au FileType clojure command! LeinClean call s:simple_lein_run('clean')
+	au FileType clojure command! LeinCompile call s:simple_lein_run('compile')
+	au FileType clojure command! PushToClojars call PushToClojars()
+	au FileType clojure command! -nargs=+ Lein call s:simple_lein_run(<q-args>)
+
+"	au FileType clojure command! UpdateClojureNS call s:update_clojure_namespace()
+aug END
+
+cnoremap <Leader>ns call s:get_clojure_namespace()
+command! LeinNS call s:get_clojure_namespace()
+
+" }}}
