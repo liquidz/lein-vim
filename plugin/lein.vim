@@ -16,8 +16,8 @@ endif
 if !exists('g:clojars_command')
 	let g:clojars_command = 'scp pom.xml %s clojars@clojars.org:'
 endif
-if !exists('g:lein_project_not_found')
-	let g:lein_project_not_found = g:lein_project . ' is not found.'
+if !exists('g:lein_show_message')
+	let g:lein_show_message = 1
 endif
 " }}}
 
@@ -46,21 +46,22 @@ function! s:get_project_dir()
 	endif
 endfunction
 
+" =trim
 function! s:trim(str)
-	let res = substitute(a:str, '\(^\s\+\)\|\(\s\+$\)', '', 'g')
-	"echo 'res = ' . res
-	return res
+	return substitute(a:str, '\(^\s\+\)\|\(\s\+$\)', '', 'g')
+	"return res
 endfunction
 
-function! s:update_clojure_namespace()
-	let b:clojure_ns =  <SID>trim(substitute(getline(search('(ns', 'bn')), '\((ns\|)\)', '', 'g'))
+" =myecho
+function! s:myecho(str)
+	if g:lein_show_message == 1
+		echo a:str
+	endif
 endfunction
 
-"(ns hello
-")
-
+" =get_clojure_namespace
 function! s:get_clojure_namespace()
-	echo <SID>trim(substitute(getline(search('(ns', 'bn')), '\((ns\|)\|"\)', '', 'g'))
+	return <SID>trim(substitute(getline(search('(ns ', 'bn')), '\((ns\|)\|"\)', '', 'g'))
 endfunction
 
 " =open_result_window
@@ -98,36 +99,49 @@ function! s:write_result_buffer(loading_message, command)
 	silent 1 delete _
 endfunction
 
-" =simple_lein_run
-function! s:simple_lein_run(command)
-	let path = <SID>get_project_dir()
-	if path != ''
-		execute printf('cd %s', path)
-		echo <SID>system_lein(a:command)
-		execute 'cd -'
-		echo 'fin'
+" =toggle_compile_when_saved
+function! s:toggle_compile_when_saved()
+	if !exists('b:lein_compile_when_saved') || b:lein_compile_when_saved == 0
+		let b:lein_compile_when_saved = 1
+		call s:myecho('[ON] compile when saved')
 	else
-		echo g:lein_project_not_found
+		let b:lein_compile_when_saved = 0
+		call s:myecho('[OFF] compile when saved')
+	endif
+endfunction
+
+" =print_clojure_namespace
+function! s:print_clojure_namespace()
+	call s:myecho(<SID>get_clojure_namespace())
+endfunction
+
+" =compile_when_save
+function! s:compile_when_save()
+	if exists('b:lein_compile_when_saved') && b:lein_compile_when_saved == 1
+		let namespace = <SID>get_clojure_namespace()
+		let command = 'compile ' . namespace
+		call s:system_lein(command)
 	endif
 endfunction
 
 " =system_lein
 function! s:system_lein(command)
 	let cmd = g:lein_command . ' ' . a:command
-	return system(cmd)
+	call s:myecho("start " . a:command)
+	let result = system(cmd)
+	call s:myecho("finish " . a:command)
+	return result
 endfunction
 
 " =LeinTest
 function! LeinTest()
-	let path = <SID>get_project_dir()
-	if path != ''
-		execute printf('cd %s', path)
-		call s:open_result_window('test')
-		call s:write_result_buffer('starting test ...', 'test')
-		execute 'cd -'
-	else
-		echo g:lein_project_not_found
-	endif
+	call s:open_result_window('test')
+	call s:write_result_buffer('starting test ...', 'test')
+endfunction
+
+function! LeinRun()
+	call s:open_result_window('run')
+	call s:write_result_buffer('running ...', 'run')
 endfunction
 
 " =PushToClojars
@@ -139,12 +153,12 @@ function! PushToClojars()
 		let jar = glob(path . '/*.jar')
 
 		if pom == ''
-			call s:simple_lein_run('pom')
+			call s:system_lein('pom')
 			let pom = glob(path . '/pom.xml')
 		endif
 	
 		if jar == ''
-			call s:simple_lein_run('jar')
+			call s:system_lein('jar')
 			let jar = glob(path . '/*.jar')
 		endif
 	
@@ -153,10 +167,11 @@ function! PushToClojars()
 			execute '!' printf(g:clojars_command, fnamemodify(jar, ':t'))
 			execute 'cd -'
 		else
-			echo 'pom.xml or JAR is not found.'
+			call s:myecho('pom.xml or JAR is not found.')
 		endif
 	endif
 endfunction
+
 
 " =key mappings {{{
 aug LeinKeymap
@@ -170,6 +185,7 @@ aug LeinKeymap
 		au FileType clojure nnoremap <Leader>lu :LeinUberJar<CR>
 		au FileType clojure nnoremap <Leader>lc :LeinCompile<CR>
 		au FileType clojure nnoremap <Leader>lp :PushToClojars<CR>
+		au FileType clojure nnoremap <Leader>lr :LeinRun<CR>
 		au FileType clojure nnoremap <Leader>ll :Lein 
 	
 "		cnoremap <silent> <Leader>ns expand('b:clojure_ns')<CR>
@@ -182,20 +198,22 @@ aug END
 aug LeinCommand
 	au!
 	au FileType clojure command! LeinTest call LeinTest()
-	au FileType clojure command! LeinPom call s:simple_lein_run('pom')
-	au FileType clojure command! LeinJar call s:simple_lein_run('jar')
-	au FileType clojure command! LeinDeps call s:simple_lein_run('deps')
-	au FileType clojure command! LeinInstall call s:simple_lein_run('install')
-	au FileType clojure command! LeinUberJar call s:simple_lein_run('uberjar')
-	au FileType clojure command! LeinClean call s:simple_lein_run('clean')
-	au FileType clojure command! LeinCompile call s:simple_lein_run('compile')
+	au FileType clojure command! LeinPom call s:system_lein('pom')
+	au FileType clojure command! LeinJar call s:system_lein('jar')
+	au FileType clojure command! LeinDeps call s:system_lein('deps')
+	au FileType clojure command! LeinInstall call s:system_lein('install')
+	au FileType clojure command! LeinUberJar call s:system_lein('uberjar')
+	au FileType clojure command! LeinClean call s:system_lein('clean')
+	au FileType clojure command! LeinCompile call s:system_lein('compile')
+	au FileType clojure command! LeinRun call LeinRun()
+
+	au FileType clojure command! LeinNS call s:print_clojure_namespace()
+	au FileType clojure command! LeinToggleAutoCompile call s:toggle_compile_when_saved()
+
 	au FileType clojure command! PushToClojars call PushToClojars()
-	au FileType clojure command! -nargs=+ Lein call s:simple_lein_run(<q-args>)
+	au FileType clojure command! -nargs=+ Lein call s:system_lein(<q-args>)
 
-"	au FileType clojure command! UpdateClojureNS call s:update_clojure_namespace()
+	au BufWritePost *.clj call s:compile_when_save()
 aug END
-
-cnoremap <Leader>ns call s:get_clojure_namespace()
-command! LeinNS call s:get_clojure_namespace()
-
 " }}}
+
