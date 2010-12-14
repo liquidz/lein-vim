@@ -21,30 +21,30 @@ if !exists('g:lein_show_message')
 endif
 " }}}
 
-" =reverse_find
-function! s:reverse_find(filename, path)
-	if fnamemodify(a:path, ':p:h') == '/'
-		let filelist = glob('/' . a:filename)
-		return (filelist == '') ? '' : filelist
-	else
-		let filelist = glob(a:path . '/' . a:filename)
-		if filelist == ''
-			return <SID>reverse_find(a:filename, '../' . a:path)
-		else
-			return filelist
-		endif
-	endif
-endfunction
-
-" =get_project_dir
-function! s:get_project_dir()
-	let project_file = <SID>reverse_find(g:lein_project, '.')
-	if project_file != ''
-		return fnamemodify(project_file, ":p:h")
-	else
-		return ''
-	endif
-endfunction
+"" =reverse_find
+"function! s:reverse_find(filename, path)
+"	if fnamemodify(a:path, ':p:h') == '/'
+"		let filelist = glob('/' . a:filename)
+"		return (filelist == '') ? '' : filelist
+"	else
+"		let filelist = glob(a:path . '/' . a:filename)
+"		if filelist == ''
+"			return <SID>reverse_find(a:filename, '../' . a:path)
+"		else
+"			return filelist
+"		endif
+"	endif
+"endfunction
+"
+"" =get_project_dir
+"function! s:get_project_dir()
+"	let project_file = <SID>reverse_find(g:lein_project, '.')
+"	if project_file != ''
+"		return fnamemodify(project_file, ":p:h")
+"	else
+"		return ''
+"	endif
+"endfunction
 
 " =trim
 function! s:trim(str)
@@ -115,12 +115,16 @@ function! s:print_clojure_namespace()
 	call s:myecho(<SID>get_clojure_namespace())
 endfunction
 
+" =compile_this
+function! s:compile_this()
+	let ns = <SID>get_clojure_namespace()
+	call s:system_lein('compile ' . ns)
+endfunction
+
 " =compile_when_save
 function! s:compile_when_save()
 	if exists('b:lein_compile_when_saved') && b:lein_compile_when_saved == 1
-		let namespace = <SID>get_clojure_namespace()
-		let command = 'compile ' . namespace
-		call s:system_lein(command)
+		call s:compile_this()
 	endif
 endfunction
 
@@ -140,8 +144,14 @@ function! LeinTest()
 endfunction
 
 function! LeinRun()
-	call s:open_result_window('run')
-	call s:write_result_buffer('running ...', 'run')
+
+endfunction
+
+function! LeinRun()
+	let ns = <SID>get_clojure_namespace()
+	let cmd = 'run -m ' . ns
+	call s:open_result_window(cmd)
+	call s:write_result_buffer('running ' . ns . ' ...', cmd)
 endfunction
 
 " =PushToClojars
@@ -186,10 +196,11 @@ aug LeinKeymap
 		au FileType clojure nnoremap <Leader>lc :LeinCompile<CR>
 		au FileType clojure nnoremap <Leader>lp :PushToClojars<CR>
 		au FileType clojure nnoremap <Leader>lr :LeinRun<CR>
+		au FIleType clojure nnoremap <Leader>lC :LeinCompileThis<CR>
 		au FileType clojure nnoremap <Leader>ll :Lein 
-	
-"		cnoremap <silent> <Leader>ns expand('b:clojure_ns')<CR>
-"		nnoremap <Leader>ns :call echo s:get_clojure_namespace
+
+		au FileType clojure inoremap <Leader>ns <C-R>=printf("%s", <SID>get_clojure_namespace())<CR>
+		au FileType clojure cnoremap <Leader>ns <C-R>=printf("%s", <SID>get_clojure_namespace())<CR>
 	endif
 aug END
 " }}}
@@ -205,6 +216,7 @@ aug LeinCommand
 	au FileType clojure command! LeinUberJar call s:system_lein('uberjar')
 	au FileType clojure command! LeinClean call s:system_lein('clean')
 	au FileType clojure command! LeinCompile call s:system_lein('compile')
+	au FileType clojure command! LeinCompileThis call s:compile_this()
 	au FileType clojure command! LeinRun call LeinRun()
 
 	au FileType clojure command! LeinNS call s:print_clojure_namespace()

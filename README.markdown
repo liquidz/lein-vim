@@ -13,7 +13,10 @@ plugin for leiningen
 
 **:LeinTest**
   lein test
-  
+
+  open another buffer for test result
+  "q" for closing buffer window
+
 **:LeinDeps**
   lein deps
 
@@ -26,7 +29,20 @@ plugin for leiningen
 **:LeinCompile**
   lein compile
 
+**:LeinCompileThis**
+  lein compile [*ns*]
+
+**:LeinRun**
+  lein run -m [*ns*]
+
+  open another buffer for run result
+  "q" for closing buffer window
+
+**:Lein <args>**
+  lein <args>
+
 ## Key maps
+### normal mode
 **`<Leader>`lm**
   :LeinPom
   
@@ -44,3 +60,20 @@ plugin for leiningen
 
 **`<Leader>`lc**
   :LeinCompile
+
+**`<Leader>`lC**
+  :LeinCompileThis
+
+**`<Leader>`lr**
+  :LeinRun
+
+**`<Leader>`ll**
+  :Lein
+
+### insert mode
+**`<Leader>`ns**
+  expand to *ns*
+
+### command mode
+**`<Leader>`ns**
+  expand to *ns*
